@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cqrs-frontend
+spec:
+  containers:
+      - name: cqrs-frontend
+        image: code2k13/cqrs-frontend:latest
+        ports:
+          - containerPort: 8080
+        env:
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: cqrs-redis
+                key: redis-password
+                optional: false
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cqrs-frontend-service
+spec:
+  selector:
+    app: cqrs-frontend
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

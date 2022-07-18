@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CQRS Demo</title>
+    <style>
+        .maindiv {
+            margin-top: 20px
+        }
+    </style>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+</head>
+
+<body>
+    <script type="module">
+        import { html, Component, render } from 'https://unpkg.com/htm/preact/standalone.module.js';
+        export class TodoList extends Component {
+
+            updateData = e => {
+                const { data } = this.state;
+                let val = e.target.value
+                this.setState({ data: val })
+            }
+
+            saveData = e => {
+                const { d_type = 'bp', data } = this.state
+                let that = this
+                fetch('/add', {
+                    method: "POST",
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ d_type: d_type, data: data })
+                }).then(function (response) {
+                    response.json().then(c => console.log(c))
+                    that.setState({ message: "data saved | key=" + d_type + " , value= " + data })
+                })
+
+            }
+
+            searchData = e => {
+                const { sd_type = 'bp', max_count = 25 } = this.state
+                let that = this;
+                fetch('/search', {
+                    method: "POST",
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ sd_type: sd_type, max_count: max_count })
+                }).then(function (response) {
+                    response.json().then(c => that.setState({ search_results: c }))
+
+                })
+
+
+            }
+
+            setDataType = e => {
+                const { d_type } = this.state
+                let val = e.target.value
+                this.setState({ d_type: val })
+            }
+
+            setSearchDataType = e => {
+                const { sd_type } = this.state
+                let val = e.target.value
+                this.setState({ sd_type: val })
+            }
+
+            setMaxCount = e => {
+                const { max_count = 25 } = this.state
+                let val = e.target.value
+                this.setState({ max_count: val })
+            }
+
+            render({ }, { data, message = '', d_type = 'bp', sd_type = 'bp', max_count = 25, search_results = [] }) {
+                return html`
+                    <div class='container form-group maindiv' >
+                        <div class="row">
+                            <div class="col-md-6" style='border-right: 1px solid gray; padding:10px'>
+                                <h2> Add records </h2>
+                                <label class="form-label" for="type">Select post type</label>
+                                <select id="type" class="form-select" onInput=${this.setDataType}>
+                                    <option value="bp" selected>Blog post</option>
+                                    <option value="cmt">Comment</option>
+                                    <option value="rvw">Review</option>
+                                </select>
+                                <label class="form-label" for="txt">Enter post text</label>
+                                <input id="txt" class="form-control" value=${this.data} onInput=${this.updateData} />
+                                <br />
+                                <button class=" btn btn-primary " onClick=${this.saveData}>Save</button>
+                                <pre>${message}    </pre>
+                            </div>
+
+                            <div class="col-md-6" style='background-color:#eee; padding:10px'>
+                                <h2> Query records </h2>
+                                <label class="form-label" for="type_searchpe">Search post type</label>
+                                <select id="type_search" class="form-select" onInput=${this.setSearchDataType}>
+                                    <option value="bp" selected>Blog post</option>
+                                    <option value="cmt">Comment</option>
+                                    <option value="rvw">Review</option>
+                                </select>
+                                <label class="form-label" for="max_count">Max number of records</label>
+                                <select id="max_count" class="form-select" onInput=${this.setMaxCount}>
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <br />
+                                <button class=" btn btn-primary " onClick=${this.searchData}>Search</button>         
+                                <br/>          
+                                    <ul class="list-group" style="padding-top:20px;">
+                                        ${search_results.map(r => html`<li class="list-group-item">${r}</li>`)}
+                                    </ul>
+
+                            </div>
+                        </div>
+
+                </div > `
+            }
+        }
+        render(html`<${TodoList} />`, document.body);
+    </script>
+</body>
+
+</html>
